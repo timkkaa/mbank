@@ -17,14 +17,19 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from journal.views import AddMoneyView, LoginView, ProfileView, RegistrationView, TransactionView
+from journal.views import (AddMoneyView, LoginView,
+                           ProfileView, RegistrationView,
+                           TransactionView, AddMoneyClickView,
+                           MakeTransactionView)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('add-money/', AddMoneyView.as_view()),
+    path('add-money/', AddMoneyClickView.as_view(), name='click-button-url'),
     path('login/', LoginView.as_view()),
     path('profile/', ProfileView.as_view()),
     path('registration/', RegistrationView.as_view()),
     path('transaction/', TransactionView.as_view()),
+    path('transaction/', MakeTransactionView.as_view(), name='transaction-url'),
 
 ]
