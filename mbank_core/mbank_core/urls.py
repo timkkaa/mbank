@@ -26,9 +26,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('add-money/', AddMoneyView.as_view()),
     path('add-money/', AddMoneyClickView.as_view(), name='click-button-url'),
-    path('login/', LoginView.as_view()),
-    path('profile/', ProfileView.as_view()),
-    path('registration/', RegistrationView.as_view()),
+    path('login/', LoginView.as_view(), name='login-url'),
+    path('profile/', ProfileView.as_view(), name='profile-url'),
+    path('registration/', RegistrationView.as_view(), name='registration-url'),
     path('transaction/', TransactionView.as_view()),
     path('transaction/', MakeTransactionView.as_view(), name='transaction-url'),
 

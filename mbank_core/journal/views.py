@@ -1,14 +1,13 @@
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
-from django.db import transaction
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
-from django.views import View
-from django.views.generic import TemplateView
-
 from journal.models import CustomUser
-
+from typing import Any
+from django.db import transaction
+from django.contrib.auth import login
+from django.views.generic import TemplateView, View
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password, check_password
 
 class AddMoneyView(TemplateView):
     template_name = 'add-money-page.html'
@@ -35,25 +34,38 @@ class AddMoneyClickView(TemplateView):
 class LoginView(TemplateView):
     template_name = 'login-page.html'
 
-    def login_view(request):
-        if request.method == 'POST':
-            phone = request.POST.get('phone')
-            password = request.POST.get('password')
 
-            # Аутентификация пользователя
-            user = authenticate(request, username=phone, password=password)
 
-            if user is not None:
-                # Логиним пользователя и перенаправляем на главную страницу
-                login(request, user)
-                return redirect('home')  # Замените 'home' на нужный URL
 
-            # Ошибка аутентификации
-            return HttpResponse("Неправильный номер телефона или пароль")
+class MakeLoginView(View):
+    def post(self, request, *args, **kwargs):
+        phone_number = self.request.POST.get('phone')
+        password = self.request.POST.get('password')
 
-        # Показ формы логина, если метод запроса не POST
-        return render(request, 'login-page.html')
+        try:
+            user = User.objects.get(phone_number=phone_number)
+        except:
+            return render(request, template_name='registration-page.html', context={'current_user': self.request.user})
 
+        if check_password(password, user.password):
+            login(self.request, user)
+            return render(request, template_name='profile-page.html', context={'current_user': self.request.user})
+
+        else:
+            return render(request, template_name='registration-page.html', context={'current_user': self.request.user})
+
+
+class ProfilePageView(TemplateView):
+    template_name = "profile-page.html"
+
+    def get_context_data(self, **kwargs: Any):
+        curent_user = self.request.user
+
+        context = {
+            'current_user': curent_user
+        }
+
+        return context
 class ProfileView(TemplateView):
     template_name = 'profile-page.html'
     def get_context_data(self, **kwargs):
@@ -65,30 +77,30 @@ class ProfileView(TemplateView):
 
 class RegistrationView(TemplateView):
     template_name = 'registration-page.html'
-    def register_view(request):
-        if request.method == 'POST':
-            name = request.POST.get('name')
-            phone = request.POST.get('phone')
-            password = request.POST.get('password')
 
-            # Проверяем, существует ли пользователь с таким номером телефона
-            if User.objects.filter(username=phone).exists():
-                return HttpResponse("Пользователь с таким номером телефона уже существует")
+    def post(self, request, *args, **kwargs):
+        username = self.request.POST.get('name')
+        phone_number = self.request.POST.get('phone')
+        password = self.request.POST.get('password')
 
-            # Создаем нового пользователя
-            user = User.objects.create(
-                username=phone,
-                first_name=name,
-                password=make_password(password)  # Хэшируем пароль
-            )
+        if not username or not phone_number or not password:
+            print(username, phone_number, password)
+            render(request, template_name='profile-page.html')
 
-            # После успешной регистрации можно перенаправить пользователя на страницу логина
-            return redirect('login')
+        user = User(username=username, phone_number=phone_number)
+        user.password = make_password(password=password)
 
-        # Отображаем форму регистрации, если метод запроса не POST
-        return render(request, 'registration-page.html')
+        try:
+            user.save()
+        except:
+            return render(request, template_name='login-page.html', context={'current_user': self.request.user})
+        login(self.request, user)
+        context = {
+            'current_user': self.request.user
+        }
 
-
+        print('Work')
+        return render(request, template_name='profile-page.html', context=context)
 
 class TransactionView(TemplateView):
     template_name = 'transaction-page.html'
@@ -97,26 +109,31 @@ class TransactionView(TemplateView):
 
 class MakeTransactionView(View):
     def post(self, request, *args, **kwargs):
-        input_data = request.POST
-        phone_number_value = input_data['phone']
-        amount = input_data['amount']
+        sendler = request.user
+        receiver_number = request.POST.get('phone')
+        amount = request.POST.get('amount')
+
+        context = {
+            'current_user': sendler
+        }
 
         try:
-            receiver = CustomUser.objacts.get(phone_number_value=phone_number_value)
-
-        except CustomUser.DoesnotExist:
-            raise Http404
-
-        sender = request.user
+            receiver = User.objects.get(phone_number=receiver_number)
+        except User.DoesNotExist:
+            return render(request, template_name='profile-page.html', context=context)
 
         amount = float(amount)
-        if sender.balance < amount:
-            return HttpResponse('У вас недостаточно средства!')
 
-        with transaction.atomic():
-            sender.profile.balance -= amount
-            receiver.profile.balance += amount
-            sender.profile.save()
-            receiver.profile.save()
+        try:
+            if amount >= 1 and sendler.balance >= amount and not (sendler.phone_number == receiver.phone_number):
+                sendler.balance -= amount
+                receiver.balance += amount
+        except:
+            return render(request, template_name='registration-page.html', context=context)
 
-        return redirect('my-profile-url')
+            with transaction.atomic():
+                sendler.save()
+                receiver.save()
+
+            return render(request, template_name='profile-page.html', context=context)
+

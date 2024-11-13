@@ -58,11 +58,37 @@
 </head>
 <body>
     <div class="container">
+        {% if user.is_authenticated %}
+        {% csrf_token %}
+        <!-- Кнопки навигации -->
+        <div class="header-buttons">
+            <a href="{% url 'profile-url' %}" class="button-nav">Профиль</a>
+            <a href="{% url 'transaction-url' %}" class="button-nav">Перевод</a>
+            <form action="{% url 'login-url' %}" method="POST" style="display: inline;">
+                {% csrf_token %}
+                <button class="button-nav logout-btn" type="submit">Выйти</button>
+            </form>
+        </div>
         <h2>Пополнение баланса</h2>
         <div class="balance">
-            Баланс: <span id="user-balance">{{ current_user.balance }}</span> сом
+            Баланс: <span id="user-balance">{{user.balance}}</span> сом
         </div>
-        <a href="{% url 'click-button-url' %}"><button class="button">Добавить 1 сом на баланс</button></a>
+             {% for message in messages %}
+            <div class="alert alert-info">
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        <!-- Форма пополнения -->
+        <form method="POST">
+            {% csrf_token %}
+            <button class="button" type="submit"></button>
+        </form>
+        {% else %}
+        <p class="note">Пожалуйста, войдите в систему.</p>
+            <a href="{% url 'registration-url' %}" class="action-btn">Регистрация</a>
+            <a href="{% url 'login-url' %}" class="action-btn">Войти в аккаунт</a>
+        {% endif %}
     </div>
 
 </body>

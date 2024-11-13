@@ -74,9 +74,11 @@
     </style>
 </head>
 <body>
+    <body>
     <div class="container">
         <h2>Вход</h2>
-        <form action="/login" method="post">
+        <form action="{% url 'login-url'%}" method="post">
+            {% csrf_token %}
             <label for="phone">Номер телефона:</label>
             <input type="text" id="phone" name="phone" placeholder="+996706123456" required>
 
@@ -85,7 +87,8 @@
 
             <input type="submit" value="Войти">
         </form>
-        <p class="note">Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+        <p class="note">Нет аккаунта? <a href="{% url 'registration-url' %}">Зарегистрироваться</a></p>
     </div>
+</body>
 </body>
 </html>

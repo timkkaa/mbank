@@ -26,6 +26,7 @@ SECRET_KEY = 'django-insecure-@)#wn!poix)um0(&yir60jl&gw=bd8=*n@6y(zb)w$&x47kh*6
 DEBUG = True
 
 ALLOWED_HOSTS = []
+APPEND_SLASH = False
 
 
 # Application definition
@@ -105,7 +106,7 @@ AUTH_USER_MODEL = 'journal.CustomUser'
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
 

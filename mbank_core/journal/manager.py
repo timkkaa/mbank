@@ -19,6 +19,6 @@ class CustomUserManager(BaseUserManager):
 
         # Устанавливаем пароль отдельно
         user.set_password(password)
-
+        user.save()
         # Возвращаем пользователя
         return user
